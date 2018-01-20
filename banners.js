@@ -1,0 +1,27 @@
+module.exports = {
+  
+  banner: function(){
+    var category = {
+    url: function(category){
+        switch(category){
+          //return banner urls
+          case "ideas": return "https://lh3.googleusercontent.com/w1XFkuVapW9bv46J3FiMwSwctVYvNoX5krkDoi9ItjRaO2Oth1_qkWmSPTs_phjl6jWxoZwnlLqBxv5kg0FrBkR6nWy_k04IVjE=w800-h90-rw-no";
+          case "development": return "https://lh3.googleusercontent.com/Vbz5QRHiNRUj_ibb3SHezkBDeGDgIuK9gM-8fJT4L66alxOQIYlFFRODqBZg2hUwTXpxzL3VuAlW5zdCnChQevboRs_5lT_isYw=w800-h90-rw-no";
+          case "sub-projects": return "https://lh3.googleusercontent.com/Vbz5QRHiNRUj_ibb3SHezkBDeGDgIuK9gM-8fJT4L66alxOQIYlFFRODqBZg2hUwTXpxzL3VuAlW5zdCnChQevboRs_5lT_isYw=w800-h90-rw-no";     //banner needed ?
+          case "bug_hunting": return "https://lh3.googleusercontent.com/yFVQo6FA0tOoZdGJIhhL9ShIEiGCM-_XxsjqiA3Gw7IZSD9FtjUjEcXPGNL3GS69SsKJDhe5AXU_fYjaJ0g2smMIQBSi3EYb0qc=w800-h90-rw-no";
+          case "translations": return "https://lh3.googleusercontent.com/t_syZcOk_m-iynsi7ozv-ARV93BJmG4JIR3KuFZ2YgLq8zUhQojDX-FV5erBoKuZXAXxVNcj4pkBEl-dBc37EXkNdfRR3OI_tjY=w800-h90-rw-no";
+          case "graphics": return "https://lh3.googleusercontent.com/_gI1jZb8AFOwXxBp2zEtQzIrN_9__ZPh8dBqn_IXXzj1C50oFwHv42UkS00EcHRPdH869AeOwbjP4dGNr58UKS0pc62DMUm64qc=w800-h90-rw-no";
+          case "analysis": return "https://lh3.googleusercontent.com/bybZRyQ9VuhVoQ1w50hmGnpxAPupOdPJDhrZL0N6J3xMUyKyPHOZcMRMYgfomqfRkh7Cm6WnmLsSBHYOID7H-cbz_aMj6qvF0PA=w800-h90-rw-no";
+          case "visibility": return "https://lh3.googleusercontent.com/_xvS020A-nRtbGL0eEs2kaSVYmvGLhmXl6UqedKlol7ysgoOciZCW_14wIE7Hd8CF-ihccaf5chGjuPjHQycHjbzImOBXirAYWs=w800-h90-rw-no";
+          case "documentation": return "https://lh3.googleusercontent.com/zx9fvCWKmNlLJTXPLaSS_sdcXQ_AJsenuRdNNTlf59UGztKPeD_8-pb0vdtULRaRiiZ3-9GeB7dQSTzNHfrv-FORokImYHosS1Q=w800-h90-rw-no";
+          case "tutorials": return "https://lh3.googleusercontent.com/_MxaGG_QlRLaenWBQWUN-nNj4VLwP5oS9IvAaKnEzf3-TesIvJY3oaprVail-Z1F5t1oiiseniTIW_XgHluMEBcRBgeC7ZuF6iw=w800-h90-rw-no";
+          case "video_tutorials": return "https://lh3.googleusercontent.com/PEaFj_bBlb_LxtVKvpz7QYErW4CYM1SzlcbtIZgNNh0WBYgvmJP1WZbxdOc0UmNRDtCOcVeq4Qnviu6H_2BKn5RL2vs2tvw4As4=w800-h90-rw-no";
+          case "copywriting": return "https://lh3.googleusercontent.com/uejh7ugNRQSffmpVr2IFyU9tS1TuEXfBZSM_7exalzlwZ4cGp1HluwU9kuiAVJD_S-kEmudrG7BYairKaahnhp_FsJb7E2kGO9s=w800-h90-rw-no";
+          case "blog": return "https://lh3.googleusercontent.com/zpiUVaoyFosuluRPVw5uO5-kCH2lHhQcNxsOL-vmEPPlICfMa-K5yTLaOgGEuM0FVAE-myL_qU6LSp6xYEvzyBzhpTEq1Ikqumg=w800-h90-rw-no";
+        }
+      }
+    }
+    return category;
+  }
+  
+};

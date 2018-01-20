@@ -1,0 +1,17 @@
+{
+  "name": "utopian-rule-checker-discord-bot",
+  "version": "0.0.1",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "eris": "^0.7.2",
+    "request": "latest",
+    "cheerio": "latest",
+    "steem": "latest"
+  },
+  "engines": {
+    "node": "8.x"
+  }
+}
