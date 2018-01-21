@@ -1,6 +1,6 @@
 {
-  "name": "utopian-rule-checker-discord-bot",
-  "version": "0.0.1",
+  "name": "scoutopian",
+  "version": "0.0.2",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -13,5 +13,7 @@
   },
   "engines": {
     "node": "8.x"
-  }
+  },
+  "license": "MIT",
+  "repository": "github:techrube/scoutopian"
 }
