@@ -3,7 +3,8 @@ const Eris = require("eris");
 const request = require("request");
 const cheerio = require("cheerio");
 const steem = require("steem");
-const banner = require("./banners").banner();
+const fs = require("fs")
+var banner = JSON.parse(fs.readFileSync("banners.json"))
 var score;
 
 steem.api.setOptions({ url: 'https://api.steemit.com' });
@@ -72,7 +73,7 @@ function sendResponse(msg, json, gitHub, downvotes){
         thumbnail: {
           url: "https://chart.googleapis.com/chart?chs=225x125&cht=gom&chd=t:"+score},
         image: {
-          url: banner.url(jsonMetadata.type)}
+          url: banner[jsonMetadata.type]}
       }
   });
 }
