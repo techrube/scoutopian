@@ -1,15 +1,16 @@
 {
   "name": "scoutopian",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "eris": "^0.7.2",
+    "eris": "latest",
     "request": "latest",
-    "cheerio": "latest",
-    "steem": "latest"
+    "request-promise": "latest",
+    "steem": "latest",
+    "express": "latest"
   },
   "engines": {
     "node": "8.x"
