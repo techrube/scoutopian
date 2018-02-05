@@ -1,7 +1,6 @@
 "use strict";
 const request = require("request-promise")
 const steem = require("steem");
-const GITHUB_API = "https://api.github.com"
 steem.api.setOptions({url: "https://api.steemit.com"});
 
 var rules = {}
@@ -34,10 +33,11 @@ rules.githubCheck = (checkList) => {
         for(let i=0; i<links.length; i++){
           if(links[i].search("https:\/\/github\.com\/"+jsonMetaData.repository.full_name+"\/pull\/") == 0){
             let prNo = links[i].split("/")[6]
-            let prUrl = GITHUB_API + "/repos/"+jsonMetaData.repository.full_name+"/pulls/"+prNo.toString()
+            let prUrl = "/repos/"+jsonMetaData.repository.full_name+"/pulls/"+prNo.toString()
             getDataByUrl(prUrl)
-            .then((prJson) => {handlePR(JSON.parse(prJson))})
-            .then(() => resolve()).catch((err) => reject(err))
+              .then((prJson) => {handlePR(JSON.parse(prJson))})
+              .then(() => resolve())
+              .catch((err) => reject(err))
             return false  //stop searching, when the first pull request link is found on the contribution's body
           }
         }
@@ -70,7 +70,7 @@ rules.githubCheck = (checkList) => {
         for(let i=0; i<links.length; i++){
           if(links[i].search("https:\/\/github\.com\/" + jsonMetaData.repository.full_name + "\/commit\/") == 0){
             let prNo = links[i].split("/")[6]
-            getDataByUrl(GITHUB_API + "/repos/" + jsonMetaData.repository.full_name + "/commits/" + prNo.toString())
+            getDataByUrl("/repos/" + jsonMetaData.repository.full_name + "/commits/" + prNo.toString())
               .then((cmJson) => handleCommit(cmJson))
               .then(() => resolve())
               .catch((err) => reject(err))
@@ -104,7 +104,7 @@ rules.githubCheck = (checkList) => {
         username = jsonMetaData.repository.owner.login
       }
       return new Promise((resolve, reject) => {
-        getDataByUrl(GITHUB_API + "/users/" + username).then((res) => {
+        getDataByUrl("/users/" + username).then((res) => {
           let githubProfile = JSON.parse(res)
           let rgx = new RegExp(utopianName, 'i')
           if(githubProfile.name != null && (githubProfile.name).match(rgx) != null)
@@ -114,7 +114,7 @@ rules.githubCheck = (checkList) => {
           if(githubProfile.bio != null && (githubProfile.bio).match(rgx) != null)
             repo.name_check = true
           resolve()
-        }).catch((err)=> reject(err))
+        }).catch((err) => reject(err))
       })
     }
     
@@ -149,17 +149,24 @@ rules.githubCheck = (checkList) => {
     })
   }
   
-  var getDataByUrl = (prUrl) => {
+  var getDataByUrl = (path) => {
     return new Promise((resolve, reject) => {
       let options = {
-        url: prUrl,
+        url: "https://api.github.com" + path,
         headers: {
-          'User-Agent': 'scoutopian'
-        }
+          'User-Agent': 'scoutopian',
+          'Authorization': 'Basic ' +  new Buffer(process.env.GITHUB_PAT).toString('base64')
+        },
+        resolveWithFullResponse: true,
       }
       request(options)
-        .then((result) => resolve(result))
-        .catch((err) => reject(err))
+        .then((response) => {
+          if(parseInt(response.headers['x-ratelimit-remaining']) <= 0)
+            reject("GitHub API rate limit exceeded! Limit will be reset " +
+                  ((parseInt(response.headers['x-ratelimit-reset'] + "000") - Date.now())/60000).toPrecision(3) + " mins later\n")
+          else
+            resolve(response.body)
+        }).catch((err) => reject(err))
     })
   }
   
@@ -181,8 +188,8 @@ rules.githubCheck = (checkList) => {
   
   var fetchRepoData = () => {
     return new Promise((resolve, reject) => {
-      Promise.all([getDataByUrl(GITHUB_API + "/repos/" + repoFullName + "/readme")
-                   , getDataByUrl(GITHUB_API + "/repos/" + repoFullName)])
+      Promise.all([getDataByUrl("/repos/" + repoFullName + "/readme")
+                   , getDataByUrl("/repos/" + repoFullName)])
       .then((results) => {
           let readme = results[0]
           if(readme.message == undefined)
@@ -289,6 +296,8 @@ rules.completeRuleCheck = (url) => {
     rules.getContribution(url)
     .then((contribution) => {
       checkList.contribution = contribution
+    })
+    .then(() => 
       Promise.all([rules.githubCheck(checkList), rules.downvoteCheck(checkList.contribution.active_votes)])
       .then((results) => {
         checkList.github = results[0]
@@ -296,7 +305,7 @@ rules.completeRuleCheck = (url) => {
         checkList.score = rules.score.value
         resolve(checkList)
       })
-    }).catch((err) => reject(err))
+    ).catch((err) => reject(err))
   })
 
 
