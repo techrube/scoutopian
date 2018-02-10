@@ -1,8 +1,9 @@
 "use strict";
 const request = require("request-promise")
-const steem = require("steem");
+const fs = require("fs")
+const steem = require("steem")
+const languageNames = JSON.parse(fs.readFileSync("./resources/languages.json"));
 steem.api.setOptions({url: "https://api.steemit.com"});
-
 var rules = {}
 
 rules.githubCheck = (checkList) => {
@@ -175,7 +176,7 @@ rules.githubCheck = (checkList) => {
       repo.text = ((repo.readme) ? ":white_check_mark:" : ":x:") + " README.md [SOFT] \n" +
                    ((repo.license) ? ":white_check_mark:" : ":x:") + " LICENSE [SOFT] \n" +
                    ((repo.age) ? ":white_check_mark:" : ":x:") + " Age [HARD] \n";
-      if(jsonMetaData.type === "development"){
+      if(jsonMetaData.type === "development" || jsonMetaData.type === "translations"){
         githubName().then(() => {
           repo.text += ((repo.name_check) ? ":white_check_mark:" : ":x:") + " GitHub Name \n" +
                        ((repo.commit != undefined && repo.commit.age_check) || (repo.pr != undefined &&repo.pr.age_check) ? ":white_check_mark:" : ":x:") + " PR/Commit Age \n"
@@ -212,9 +213,9 @@ rules.githubCheck = (checkList) => {
         rules.score.decSoft(repo.readme)
         rules.score.decSoft(repo.license)
         rules.score.decHard(repo.age)
-        if(jsonMetaData.type === "development"){
+        if(jsonMetaData.type === "development" || jsonMetaData.type === "translations"){
           rules.score.decHard(repo.name_check)
-          rules.score.decHard((repo.commit != undefined && repo.commit.age_check) || (repo.pr != undefined &&repo.pr.age_check))
+          rules.score.decHard((repo.commit != undefined && repo.commit.age_check) || (repo.pr != undefined && repo.pr.age_check))
         }
       })
       .then(() => {
@@ -262,13 +263,13 @@ rules.downvoteCheck = (votes) => {
 
 
 rules.score = {
-  decSoft: function(checkedRule){
+  decSoft: (checkedRule) => {
           if(!checkedRule){
             this.value -= 10;  // score decrement can be adjusted by total number of the soft rules
             this.value = (this.value < 0) ? 0 : this.value;
           }
         },
-  decHard: function(checkedRule){
+  decHard: (checkedRule) => {
           if(!checkedRule){
             this.value = Math.floor(this.value/1.5);
           }
@@ -296,19 +297,51 @@ rules.completeRuleCheck = (url) => {
     rules.getContribution(url)
     .then((contribution) => {
       checkList.contribution = contribution
+      //console.log(contribution)
     })
     .then(() => 
-      Promise.all([rules.githubCheck(checkList), rules.downvoteCheck(checkList.contribution.active_votes)])
+      Promise.all([rules.githubCheck(checkList),
+                   rules.downvoteCheck(checkList.contribution.active_votes),
+                   rules.detectLanguage(checkList.contribution.body)])
       .then((results) => {
         checkList.github = results[0]
         checkList.downvotes = results[1]
+        checkList.language = results[2]
         checkList.score = rules.score.value
         resolve(checkList)
       })
     ).catch((err) => reject(err))
   })
+}
 
 
+rules.detectLanguage = (text) => {
+  let textSample = text.split(" ").slice(0, 50).join(" ")
+  let language = {
+    text: "",
+    lang_check: false
+  }
+  let options = {
+    url: "http://ws.detectlanguage.com/0.2/detect",
+    qs: {
+      q: textSample,
+      key: process.env.DETECT_LANG_KEY
+    }
+  }
+  return new Promise((resolve, reject) => {
+    request(options)
+    .then((res) => {
+      language.api_result = JSON.parse(res)
+      let firstDetected = language.api_result.data.detections[0]
+      language.name = languageNames[firstDetected.language]
+      if(firstDetected.language === "en" && firstDetected.isReliable)
+        language.lang_check = true
+      language.text = (language.lang_check ? ":white_check_mark: " : ":x: ") + language.name +" \n"
+      rules.score.decHard(language.lang_check)
+      resolve(language)
+    })
+    .catch(err => {reject(err)})
+  })
 }
 
 

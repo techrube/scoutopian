@@ -4,7 +4,7 @@ const Eris = require("eris");
 const express = require('express');
 const app = express();
 const fs = require("fs");
-const banner = JSON.parse(fs.readFileSync("banners.json"));
+const banner = JSON.parse(fs.readFileSync("./resources/banners.json"));
 
 app.get("/", function (request, response) {
   response.send("Scoutopian - Utopian.io Compliance Inspector");
@@ -29,7 +29,7 @@ bot.registerCommand("check", function(msg, args){
   }
   let url = args[0]
   rules.completeRuleCheck(url)
-    .then((checkList) => sendResponse(msg, checkList.contribution, checkList.github.text, checkList.downvotes.text))
+    .then((checkList) => sendResponse(msg, checkList))
     .catch(err => console.log(err))
 }, {
   description: "Compliance check",
@@ -38,8 +38,13 @@ bot.registerCommand("check", function(msg, args){
 });
 
 
-function sendResponse(msg, contribution, github, downvotes){
-  let jsonMetadata = JSON.parse(contribution.json_metadata);
+var sendResponse = (msg, checkList) => {
+  let contribution = checkList.contribution
+  let github = checkList.github.text
+  let downvotes = checkList.downvotes.text
+  let language = checkList.language.text
+  let jsonMetadata = JSON.parse(contribution.json_metadata)
+  
   bot.createMessage(msg.channel.id, {
     content: msg.author.mention+", here is your results for https://utopian.io"+contribution.url,
     embed: {
@@ -61,6 +66,11 @@ function sendResponse(msg, contribution, github, downvotes){
           name: " Downvote Check ",
           value: downvotes,
           inline: true
+        },
+        {
+          name: " Language ",
+          value: language,
+          inline: true
         }
       ],
       footer: {
@@ -75,7 +85,6 @@ function sendResponse(msg, contribution, github, downvotes){
 
 
 bot.connect();
-
 
 var listener = app.listen(process.env.PORT, function () {
   console.log("Scoutopian is running...");
