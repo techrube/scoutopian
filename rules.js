@@ -207,20 +207,10 @@ rules.githubCheck = (checkList) => {
   }
   
   return new Promise((resolve, reject) => {
-      fetchRepoData()
-      .then(() => createResponse())
-      .then(() => {
-        rules.score.decSoft(repo.readme)
-        rules.score.decSoft(repo.license)
-        rules.score.decHard(repo.age)
-        if(jsonMetaData.type === "development" || jsonMetaData.type === "translations"){
-          rules.score.decHard(repo.name_check)
-          rules.score.decHard((repo.commit != undefined && repo.commit.age_check) || (repo.pr != undefined && repo.pr.age_check))
-        }
-      })
-      .then(() => {
-        resolve(repo)
-      }).catch((err) => reject(err))
+  fetchRepoData()
+    .then(() => createResponse())
+    .then(() => resolve(repo))
+    .catch((err) => reject(err))
   })
     
 }
@@ -228,6 +218,7 @@ rules.githubCheck = (checkList) => {
 
 rules.downvoteCheck = (votes) => {
   let downvotes = {
+    check : true,
     steemcleaners : true,
     cheetah : true,
     mack_bot : true,
@@ -255,26 +246,37 @@ rules.downvoteCheck = (votes) => {
                    (downvotes.mack_bot ? ":white_check_mark:" : ":x:") + " mack-bot\n" +
                    (downvotes.spaminator ? ":white_check_mark:" : ":x:") + " spaminator\n";
   if(!downvotes.steemcleaners || !downvotes.cheetah || !downvotes.mack_bot || !downvotes.spaminator)
-    rules.score.decHard(false);
-  return new Promise((resolve, reject) => {
-    resolve(downvotes);
-  })
+    downvotes.check = false
+  return new Promise((resolve, reject) => resolve(downvotes))
 }
 
 
-rules.score = {
-  decSoft: (checkedRule) => {
-          if(!checkedRule){
-            this.value -= 10;  // score decrement can be adjusted by total number of the soft rules
-            this.value = (this.value < 0) ? 0 : this.value;
+rules.score = (checkList) => {
+  let category = JSON.parse(checkList.contribution.json_metadata).type
+  let {github, downvotes, language} = checkList
+  let value = 100
+  let decrease = {
+    soft: (checkedRule) => {
+            if(!checkedRule)
+              value = (value < 10) ? 0 : value - 10;
+          },
+    hard: (checkedRule) => {
+            if(!checkedRule)
+              value = Math.floor(value / 1.5);
           }
-        },
-  decHard: (checkedRule) => {
-          if(!checkedRule){
-            this.value = Math.floor(this.value/1.5);
-          }
-        },
-  value: 100
+    }
+  return new Promise((resolve, reject) => {
+    decrease.soft(github.readme)
+    decrease.soft(github.license)
+    decrease.hard(github.age)
+    if(category === "development" || category === "translations"){
+      decrease.hard(github.name_check)
+      decrease.hard((github.commit != undefined && github.commit.age_check) || (github.pr != undefined && github.pr.age_check))
+    }
+    decrease.hard(downvotes.check);
+    decrease.hard(language.lang_check)
+    resolve(value)
+  })
 }
 
 
@@ -297,20 +299,21 @@ rules.completeRuleCheck = (url) => {
     rules.getContribution(url)
     .then((contribution) => {
       checkList.contribution = contribution
-      //console.log(contribution)
     })
-    .then(() => 
-      Promise.all([rules.githubCheck(checkList),
-                   rules.downvoteCheck(checkList.contribution.active_votes),
-                   rules.detectLanguage(checkList.contribution.body)])
-      .then((results) => {
-        checkList.github = results[0]
-        checkList.downvotes = results[1]
-        checkList.language = results[2]
-        checkList.score = rules.score.value
-        resolve(checkList)
-      })
-    ).catch((err) => reject(err))
+    .then(() => Promise.all([rules.githubCheck(checkList),
+                             rules.downvoteCheck(checkList.contribution.active_votes),
+                             rules.detectLanguage(checkList.contribution.body)]))
+    .then((results) => {
+      checkList.github = results[0]
+      checkList.downvotes = results[1]
+      checkList.language = results[2]
+    })
+    .then(() => rules.score(checkList))
+    .then((score) => {
+      checkList.score = score
+      resolve(checkList)
+    })
+    .catch((err) => reject(err))
   })
 }
 
@@ -337,7 +340,6 @@ rules.detectLanguage = (text) => {
       if(firstDetected.language === "en" && firstDetected.isReliable)
         language.lang_check = true
       language.text = (language.lang_check ? ":white_check_mark: " : ":x: ") + language.name +" \n"
-      rules.score.decHard(language.lang_check)
       resolve(language)
     })
     .catch(err => {reject(err)})

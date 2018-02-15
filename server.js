@@ -76,7 +76,7 @@ var sendResponse = (msg, checkList) => {
       footer: {
         text: "created by @techrube."},
       thumbnail: {
-        url: "https://chart.googleapis.com/chart?chs=225x125&cht=gom&chd=t:"+rules.score.value},
+        url: "https://chart.googleapis.com/chart?chs=225x125&cht=gom&chd=t:" + checkList.score},
       image: {
         url: banner[jsonMetadata.type]}
     }
